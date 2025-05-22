@@ -1,0 +1,63 @@
+#include <Wire.h>
+#include <Adafruit_SSD1306.h>
+#include <Adafruit_GFX.h>
+#include <RTCZero.h>
+
+#define OLED_RESET 4
+Adafruit_SSD1306 display(OLED_RESET);
+RTCZero rtc;
+
+char s_month[5];
+int tmonth, tday, tyear, thour, tminute, tsecond;
+static const char month_names[] = "JanFebMarAprMayJunJulAugSepOctNovDec";
+
+void setup() {
+  Serial.begin(9600);
+  rtc.begin();
+
+  // Set RTC using compile time
+  sscanf(__DATE__, "%s %d %d", s_month, &tday, &tyear);
+  sscanf(__TIME__, "%d:%d:%d", &thour, &tminute, &tsecond);
+  tmonth = (strstr(month_names, s_month) - month_names) / 3;
+  rtc.setTime(thour, tminute, tsecond);
+  rtc.setDate(tday, tmonth + 1, tyear - 2000);
+
+  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+  display.clearDisplay();
+  display.setRotation(4);
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+}
+
+void loop() {
+  // Read analog light sensors
+  int val1 = analogRead(A0);
+  int val2 = analogRead(A1);
+  int val3 = analogRead(A2);
+  int val4 = analogRead(A3);
+
+  // Send to Python
+  Serial.print(val1); Serial.print(",");
+  Serial.print(val2); Serial.print(",");
+  Serial.print(val3); Serial.print(",");
+  Serial.println(val4);
+
+  // Display time on OLED
+  display.clearDisplay();
+  display.setCursor(0, 0);
+  display.print("Time: ");
+  display.print(rtc.getHours()); display.print(":");
+  if (rtc.getMinutes() < 10) display.print("0");
+  display.print(rtc.getMinutes()); display.print(":");
+  if (rtc.getSeconds() < 10) display.print("0");
+  display.print(rtc.getSeconds());
+
+  display.setCursor(0, 12);
+  display.print("Date: ");
+  display.print(rtc.getMonth()); display.print("/");
+  display.print(rtc.getDay()); display.print("/");
+  display.print(rtc.getYear() + 2000);
+
+  display.display();
+  delay(1000);
+}
