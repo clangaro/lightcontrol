@@ -10,52 +10,77 @@ RTC_DS3231 rtc;
 const long interval = 1000;  // 1 second
 unsigned long previousMillis = 0;
 
+#include <Wire.h>
+#include <Adafruit_SSD1306.h>
+#include <Adafruit_GFX.h>
+#include <RTClib.h>
+
+#define OLED_RESET -1
+Adafruit_SSD1306 display(128, 64, &Wire, OLED_RESET);
+RTC_DS3231 rtc;
+
+const long interval = 1000;  // 1 second
+unsigned long previousMillis = 0;
+
 void setup() {
   Serial.begin(9600);
-  rtc.begin();
+  Wire.begin();
 
-  // Set RTC using compile time
-  sscanf(__DATE__, "%s %d %d", s_month, &tday, &tyear);
-  sscanf(__TIME__, "%d:%d:%d", &thour, &tminute, &tsecond);
-  tmonth = (strstr(month_names, s_month) - month_names) / 3;
-  rtc.setTime(thour, tminute, tsecond);
-  rtc.setDate(tday, tmonth + 1, tyear - 2000);
-
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println("SSD1306 allocation failed");
+    while (1);
+  }
   display.clearDisplay();
-  display.setRotation(4);
   display.setTextSize(1);
   display.setTextColor(WHITE);
+
+  if (!rtc.begin()) {
+    Serial.println("RTC not found!");
+    while (1);
+  }
+
+  Serial.println("Arduino ready");
 }
 
 void loop() {
-  // Read analog light sensors
-  int val1 = analogRead(A0);
-  int val2 = analogRead(A1);
-  int val3 = analogRead(A2);
-  int val4 = analogRead(A3);
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;
 
-  // Send to Python
-  Serial.print(val1); Serial.print(",");
-  Serial.print(val2); Serial.print(",");
-  Serial.print(val3); Serial.print(",");
-  Serial.println(val4);
+    int val1 = analogRead(A0);
+    int val2 = analogRead(A1);
+    int val3 = analogRead(A2);
+    int val4 = analogRead(A3);
 
-  // Display time on OLED
-  display.clearDisplay();
-  display.setCursor(0, 0);
-  display.print("Time: ");
-  display.print(rtc.getHours()); display.print(":");
-  if (rtc.getMinutes() < 10) display.print("0");
-  display.print(rtc.getMinutes()); display.print(":");
-  if (rtc.getSeconds() < 10) display.print("0");
-  display.print(rtc.getSeconds());
+    // Serial output: clean line with 4 integers
+    Serial.print(val1); Serial.print(",");
+    Serial.print(val2); Serial.print(",");
+    Serial.print(val3); Serial.print(",");
+    Serial.println(val4);
 
-  display.setCursor(0, 12);
-  display.print("Date: ");
-  display.print(rtc.getMonth()); display.print("/");
-  display.print(rtc.getDay()); display.print("/");
-  display.print(rtc.getYear() + 2000);
+    DateTime now = rtc.now();
+
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.print("Time: ");
+    if (now.hour() < 10) display.print("0");
+    display.print(now.hour()); display.print(":");
+    if (now.minute() < 10) display.print("0");
+    display.print(now.minute()); display.print(":");
+    if (now.second() < 10) display.print("0");
+    display.print(now.second());
+
+    display.setCursor(0, 12);
+    display.print("Date: ");
+    if (now.month() < 10) display.print("0");
+    display.print(now.month()); display.print("/");
+    if (now.day() < 10) display.print("0");
+    display.print(now.day()); display.print("/");
+    display.print(now.year());
+
+    display.display();
+  }
+}
 
   display.display();
   }
