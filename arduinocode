@@ -4,8 +4,8 @@
 #include <RTClib.h>
 
 #define OLED_RESET -1
-Adafruit_SSD1306 display(OLED_RESET);
-RTCZero rtc;
+Adafruit_SSD1306 display(128, 64, &Wire, OLED_RESET);
+RTC_DS3231 rtc;
 
 char s_month[5];
 int tmonth, tday, tyear, thour, tminute, tsecond;
