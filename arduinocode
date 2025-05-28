@@ -7,9 +7,8 @@
 Adafruit_SSD1306 display(128, 64, &Wire, OLED_RESET);
 RTC_DS3231 rtc;
 
-char s_month[5];
-int tmonth, tday, tyear, thour, tminute, tsecond;
-static const char month_names[] = "JanFebMarAprMayJunJulAugSepOctNovDec";
+const long interval = 1000;  // 1 second
+unsigned long previousMillis = 0;
 
 void setup() {
   Serial.begin(9600);
@@ -59,5 +58,5 @@ void loop() {
   display.print(rtc.getYear() + 2000);
 
   display.display();
-  delay(1000);
+  }
 }
