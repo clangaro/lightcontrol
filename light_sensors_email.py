@@ -6,8 +6,8 @@ Reads data from a serial port connected to multiple light sensors,
 logs readings to CSV and CSS files, and sends email alerts when
 threshold crossings are detected.
 
-Author: [Your Name]
-Date: 2025-10-29
+Author: Carolina Chedid Langaro
+Date: 2025-05-01
 """
 
 import os
